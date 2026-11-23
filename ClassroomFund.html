@@ -1,0 +1,874 @@
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Classroom Fund Management</title>
+
+  <style>
+    :root {
+      --navy: #102a43;
+      --blue: #2563eb;
+      --background: #f4f7fb;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --fund: #15803d;
+      --fund-light: #dcfce7;
+      --expense: #b91c1c;
+      --expense-light: #fee2e2;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .topbar {
+      background: var(--navy);
+      border-bottom: 3px solid #3b82f6;
+      color: white;
+    }
+
+    .topbar-inner {
+      max-width: 1180px;
+      margin: auto;
+      padding: 20px 24px;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 1.45rem;
+    }
+
+    .topbar p {
+      margin: 5px 0 0;
+      color: #cbd5e1;
+      font-size: 0.9rem;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: auto;
+      padding: 24px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      min-height: 44px;
+      padding: 10px 18px;
+      border: 0;
+      border-radius: 8px 8px 0 0;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: var(--surface);
+      color: var(--blue);
+      box-shadow: inset 0 -3px var(--blue);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .date-card {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 20px;
+      padding: 20px;
+    }
+
+    .date-controls {
+      display: grid;
+      grid-template-columns: 180px 180px;
+      gap: 12px;
+    }
+
+    .range-title {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .range-label {
+      margin: 6px 0 0;
+      color: var(--navy);
+      font-size: 1.15rem;
+      font-weight: 750;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    button {
+      min-height: 44px;
+      border-radius: 8px;
+      font: inherit;
+      transition: 0.18s ease;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 9px 11px;
+      border: 1px solid #cbd5e1;
+      background: white;
+      color: var(--text);
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--blue);
+      outline: 3px solid rgba(37, 99, 235, 0.12);
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .summary-card {
+      position: relative;
+      overflow: hidden;
+      padding: 20px;
+    }
+
+    .summary-card::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 3px;
+      background: #94a3b8;
+    }
+
+    .summary-card.fund::after { background: var(--fund); }
+    .summary-card.expense::after { background: var(--expense); }
+
+    .summary-card span {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .summary-card strong {
+      display: block;
+      margin-top: 8px;
+      color: var(--navy);
+      font-size: 1.65rem;
+    }
+
+    .summary-card.fund strong { color: var(--fund); }
+    .summary-card.expense strong { color: var(--expense); }
+
+    .panel { padding: 20px; }
+
+    .panel h2 {
+      margin: 0 0 18px;
+      color: var(--navy);
+      font-size: 1.05rem;
+    }
+
+    #recordForm {
+      max-width: 620px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .submit-btn {
+      background: var(--blue);
+      color: white;
+      font-weight: 750;
+    }
+
+    .submit-btn:hover { background: #1d4ed8; }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 150px;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      white-space: nowrap;
+    }
+
+    th,
+    td {
+      padding: 13px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 0.76rem;
+      text-transform: uppercase;
+    }
+
+    tbody tr:hover { background: #fafcff; }
+
+    .income {
+      color: var(--fund);
+      font-weight: 800;
+    }
+
+    .expense {
+      color: var(--expense);
+      font-weight: 800;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .badge-fund {
+      background: var(--fund-light);
+      color: #166534;
+    }
+
+    .badge-expense {
+      background: var(--expense-light);
+      color: #991b1b;
+    }
+
+    .delete-btn {
+      width: 34px;
+      min-height: 34px;
+      background: var(--expense-light);
+      color: var(--expense);
+      font-size: 1.1rem;
+    }
+
+    .delete-btn:hover { background: #fecaca; }
+
+    .empty {
+      padding: 32px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 650px) {
+      main {
+        padding: 12px;
+      }
+
+      .topbar-inner {
+        padding: 16px 14px;
+      }
+
+      .topbar h1 {
+        font-size: 1.15rem;
+      }
+
+      .topbar p {
+        font-size: 0.82rem;
+      }
+
+      .tabs {
+        width: 100%;
+      }
+
+      .tab {
+        flex: 1;
+        min-height: 48px;
+        padding: 8px 6px;
+        font-size: 0.78rem;
+      }
+
+      .date-card {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 14px;
+      }
+
+      .date-controls,
+      .summary,
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .summary {
+        gap: 12px;
+      }
+
+      .summary-card {
+        padding: 16px;
+      }
+
+      .summary-card strong {
+        font-size: 1.4rem;
+      }
+
+      .panel {
+        padding: 14px;
+      }
+
+      #recordForm {
+        max-width: none;
+      }
+
+      input,
+      select,
+      button {
+        min-height: 46px;
+      }
+
+      .table-wrap {
+        margin: 0 -14px -14px;
+      }
+
+      table {
+        min-width: 680px;
+      }
+
+      th,
+      td {
+        padding: 11px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1>Classroom Fund Management</h1>
+      <p>Funds and Expenses Record</p>
+    </div>
+  </header>
+
+  <main>
+    <nav class="tabs" role="tablist" aria-label="Recorder sections">
+      <button
+        class="tab active"
+        id="recording-tab"
+        role="tab"
+        aria-selected="true"
+        aria-controls="recording-panel"
+        data-tab="recording-panel"
+      >
+        Classroom Fund &amp; Expenses
+      </button>
+
+      <button
+        class="tab"
+        id="records-tab"
+        role="tab"
+        aria-selected="false"
+        aria-controls="records-panel"
+        data-tab="records-panel"
+      >
+        Records
+      </button>
+    </nav>
+
+    <section
+      class="tab-panel active"
+      id="recording-panel"
+      role="tabpanel"
+      aria-labelledby="recording-tab"
+    >
+      <section class="card date-card" aria-labelledby="rangeTitle">
+        <div>
+          <span class="range-title" id="rangeTitle">Record period</span>
+          <p class="range-label" id="rangeLabel" aria-live="polite"></p>
+        </div>
+
+        <div class="date-controls">
+          <label>
+            Start date
+            <input id="startDate" type="date">
+          </label>
+          <label>
+            End date
+            <input id="endDate" type="date">
+          </label>
+        </div>
+      </section>
+
+      <section class="summary" aria-label="Period summary">
+        <article class="card summary-card fund">
+          <span>Total Funds</span>
+          <strong id="totalFunds">₱0.00</strong>
+        </article>
+
+        <article class="card summary-card expense">
+          <span>Total Expenses</span>
+          <strong id="totalExpenses">₱0.00</strong>
+        </article>
+
+        <article class="card summary-card">
+          <span>Remaining Balance</span>
+          <strong id="balance">₱0.00</strong>
+        </article>
+      </section>
+
+      <section class="card panel">
+        <h2>New Record</h2>
+
+        <form id="recordForm">
+          <label>
+            Date
+            <input id="recordDate" type="date" required>
+          </label>
+
+          <label>
+            Description
+            <input id="description" type="text" placeholder="Enter a description" required>
+          </label>
+
+          <label>
+            Transaction type
+            <select id="type">
+              <option value="fund">Fund / Contribution</option>
+              <option value="expense">Expense</option>
+            </select>
+          </label>
+
+          <label>
+            Amount
+            <input
+              id="amount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              placeholder="0.00"
+              required
+            >
+          </label>
+
+          <button class="submit-btn" type="submit">Add Record</button>
+        </form>
+      </section>
+    </section>
+
+    <section
+      class="tab-panel"
+      id="records-panel"
+      role="tabpanel"
+      aria-labelledby="records-tab"
+    >
+      <section class="card date-card" aria-label="Records reporting period">
+        <div>
+          <span class="range-title">Record period</span>
+          <p class="range-label" id="recordsRangeLabel" aria-live="polite"></p>
+        </div>
+
+        <div class="date-controls">
+          <label>
+            Start date
+            <input id="recordsStartDate" type="date">
+          </label>
+          <label>
+            End date
+            <input id="recordsEndDate" type="date">
+          </label>
+        </div>
+      </section>
+
+      <section class="card panel">
+        <h2>Transaction Records</h2>
+
+        <div class="toolbar">
+          <input id="search" type="search" placeholder="Search records">
+
+          <select id="filter" aria-label="Filter records">
+            <option value="all">All transactions</option>
+            <option value="fund">Funds</option>
+            <option value="expense">Expenses</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th><span aria-label="Actions">Action</span></th>
+              </tr>
+            </thead>
+            <tbody id="records"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const startDateInput = document.querySelector("#startDate");
+    const endDateInput = document.querySelector("#endDate");
+    const recordsStartDateInput = document.querySelector("#recordsStartDate");
+    const recordsEndDateInput = document.querySelector("#recordsEndDate");
+    const recordDateInput = document.querySelector("#recordDate");
+    const form = document.querySelector("#recordForm");
+    const recordsBody = document.querySelector("#records");
+    const searchInput = document.querySelector("#search");
+    const filterInput = document.querySelector("#filter");
+
+    let records = loadRecords();
+
+    function loadRecords() {
+      try {
+        const result = JSON.parse(
+          localStorage.getItem("classroomFundRecords") || "[]"
+        );
+        return Array.isArray(result) ? result : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function toLocalDateString(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function getCurrentWeek() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+
+      const friday = new Date(monday);
+      friday.setDate(monday.getDate() + 4);
+
+      return [toLocalDateString(monday), toLocalDateString(friday)];
+    }
+
+    const [defaultStart, defaultEnd] = getCurrentWeek();
+
+    startDateInput.value = defaultStart;
+    endDateInput.value = defaultEnd;
+    recordsStartDateInput.value = defaultStart;
+    recordsEndDateInput.value = defaultEnd;
+    recordDateInput.value = defaultStart;
+
+    const currency = new Intl.NumberFormat("en-PH", {
+      style: "currency",
+      currency: "PHP"
+    });
+
+    function parseDate(value) {
+      return new Date(`${value}T00:00:00`);
+    }
+
+    function formatRangeDate(value) {
+      return new Intl.DateTimeFormat("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric"
+      }).format(parseDate(value));
+    }
+
+    function formatTableDate(value) {
+      return new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      }).format(parseDate(value));
+    }
+
+    function syncRecordingLimits() {
+      endDateInput.min = startDateInput.value;
+      startDateInput.max = endDateInput.value;
+      recordDateInput.min = startDateInput.value;
+      recordDateInput.max = endDateInput.value;
+
+      if (endDateInput.value < startDateInput.value) {
+        endDateInput.value = startDateInput.value;
+      }
+
+      if (
+        recordDateInput.value < startDateInput.value ||
+        recordDateInput.value > endDateInput.value
+      ) {
+        recordDateInput.value = startDateInput.value;
+      }
+    }
+
+    function syncRecordsLimits() {
+      recordsEndDateInput.min = recordsStartDateInput.value;
+      recordsStartDateInput.max = recordsEndDateInput.value;
+
+      if (recordsEndDateInput.value < recordsStartDateInput.value) {
+        recordsEndDateInput.value = recordsStartDateInput.value;
+      }
+    }
+
+    function getRangeRecords(start, end) {
+      if (!start || !end || end < start) return [];
+
+      return records.filter(record =>
+        record.date >= start && record.date <= end
+      );
+    }
+
+    function escapeHtml(value) {
+      const element = document.createElement("div");
+      element.textContent = value;
+      return element.innerHTML;
+    }
+
+    function render() {
+      syncRecordingLimits();
+      syncRecordsLimits();
+
+      const recordingStart = startDateInput.value;
+      const recordingEnd = endDateInput.value;
+      const validRecordingRange =
+        recordingStart && recordingEnd && recordingEnd >= recordingStart;
+
+      document.querySelector("#rangeLabel").textContent =
+        validRecordingRange
+          ? `${formatRangeDate(recordingStart)} to ${formatRangeDate(recordingEnd)}`
+          : "Choose a valid reporting period";
+
+      const recordingRange =
+        getRangeRecords(recordingStart, recordingEnd);
+
+      const totalFunds = recordingRange
+        .filter(record => record.type === "fund")
+        .reduce((sum, record) => sum + record.amount, 0);
+
+      const totalExpenses = recordingRange
+        .filter(record => record.type === "expense")
+        .reduce((sum, record) => sum + record.amount, 0);
+
+      document.querySelector("#totalFunds").textContent =
+        currency.format(totalFunds);
+
+      document.querySelector("#totalExpenses").textContent =
+        currency.format(totalExpenses);
+
+      document.querySelector("#balance").textContent =
+        currency.format(totalFunds - totalExpenses);
+
+      const recordsStart = recordsStartDateInput.value;
+      const recordsEnd = recordsEndDateInput.value;
+      const validRecordsRange =
+        recordsStart && recordsEnd && recordsEnd >= recordsStart;
+
+      document.querySelector("#recordsRangeLabel").textContent =
+        validRecordsRange
+          ? `${formatRangeDate(recordsStart)} to ${formatRangeDate(recordsEnd)}`
+          : "Choose a valid reporting period";
+
+      const rangeRecords =
+        getRangeRecords(recordsStart, recordsEnd);
+
+      const search = searchInput.value.trim().toLowerCase();
+      const filter = filterInput.value;
+
+      const visibleRecords = rangeRecords
+        .filter(record => filter === "all" || record.type === filter)
+        .filter(record =>
+          record.description.toLowerCase().includes(search)
+        )
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+      recordsBody.replaceChildren();
+
+      if (visibleRecords.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = 5;
+        cell.className = "empty";
+        cell.textContent =
+          "No transactions found for this reporting period.";
+
+        row.appendChild(cell);
+        recordsBody.appendChild(row);
+      } else {
+        visibleRecords.forEach(record => {
+          const row = document.createElement("tr");
+          const isFund = record.type === "fund";
+
+          row.innerHTML = `
+            <td>${formatTableDate(record.date)}</td>
+            <td>${escapeHtml(record.description)}</td>
+            <td>
+              <span class="badge ${
+                isFund ? "badge-fund" : "badge-expense"
+              }">
+                ${isFund ? "Fund" : "Expense"}
+              </span>
+            </td>
+            <td class="${isFund ? "income" : "expense"}">
+              ${isFund ? "+" : "-"}${currency.format(record.amount)}
+            </td>
+            <td>
+              <button
+                class="delete-btn"
+                type="button"
+                data-id="${record.id}"
+                title="Delete record"
+                aria-label="Delete ${escapeHtml(record.description)}"
+              >×</button>
+            </td>
+          `;
+
+          recordsBody.appendChild(row);
+        });
+      }
+    }
+
+    function save() {
+      localStorage.setItem(
+        "classroomFundRecords",
+        JSON.stringify(records)
+      );
+      render();
+    }
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(item => {
+          item.classList.remove("active");
+          item.setAttribute("aria-selected", "false");
+        });
+
+        document.querySelectorAll(".tab-panel").forEach(panel => {
+          panel.classList.remove("active");
+        });
+
+        tab.classList.add("active");
+        tab.setAttribute("aria-selected", "true");
+
+        document
+          .querySelector(`#${tab.dataset.tab}`)
+          .classList.add("active");
+      });
+    });
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+
+      const description =
+        document.querySelector("#description").value.trim();
+
+      const amount =
+        Number(document.querySelector("#amount").value);
+
+      const date = recordDateInput.value;
+      const start = startDateInput.value;
+      const end = endDateInput.value;
+
+      if (
+        !description ||
+        !Number.isFinite(amount) ||
+        amount <= 0 ||
+        !date ||
+        date < start ||
+        date > end
+      ) {
+        return;
+      }
+
+      records.push({
+        id:
+          window.crypto?.randomUUID?.() ||
+          `${Date.now()}-${Math.random()}`,
+        date,
+        description,
+        type: document.querySelector("#type").value,
+        amount
+      });
+
+      save();
+      form.reset();
+      recordDateInput.value = startDateInput.value;
+      document.querySelector("#description").focus();
+    });
+
+    recordsBody.addEventListener("click", event => {
+      const button = event.target.closest(".delete-btn");
+      if (!button) return;
+
+      if (confirm("Delete this transaction?")) {
+        records = records.filter(
+          record => record.id !== button.dataset.id
+        );
+        save();
+      }
+    });
+
+    startDateInput.addEventListener("change", () => {
+      recordsStartDateInput.value = startDateInput.value;
+      render();
+    });
+
+    endDateInput.addEventListener("change", () => {
+      recordsEndDateInput.value = endDateInput.value;
+      render();
+    });
+
+    recordsStartDateInput.addEventListener("change", render);
+    recordsEndDateInput.addEventListener("change", render);
+    searchInput.addEventListener("input", render);
+    filterInput.addEventListener("change", render);
+
+    render();
+  </script>
+</body>
+</html>
